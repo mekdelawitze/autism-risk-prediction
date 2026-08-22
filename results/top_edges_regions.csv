@@ -1,0 +1,21 @@
+rank,region_a,region_b,coefficient,direction
+1,191,65,0.023760014135483017,higher connectivity -> more ASD-like
+2,123,26,-0.022038423566019146,lower connectivity -> more ASD-like
+3,113,51,-0.020970278048889655,lower connectivity -> more ASD-like
+4,21,4,-0.020598385177569577,lower connectivity -> more ASD-like
+5,83,36,-0.020449120007731712,lower connectivity -> more ASD-like
+6,11,7,0.02001371032803449,higher connectivity -> more ASD-like
+7,101,25,-0.019635886727584016,lower connectivity -> more ASD-like
+8,121,56,-0.01958374830979047,lower connectivity -> more ASD-like
+9,191,156,0.01930274957022116,higher connectivity -> more ASD-like
+10,138,4,-0.019243105362693486,lower connectivity -> more ASD-like
+11,102,50,-0.01890323144437167,lower connectivity -> more ASD-like
+12,86,18,-0.018754906178677082,lower connectivity -> more ASD-like
+13,178,86,-0.01853471032062966,lower connectivity -> more ASD-like
+14,194,8,0.01850864393219703,higher connectivity -> more ASD-like
+15,152,65,-0.018461569833777138,lower connectivity -> more ASD-like
+16,199,191,0.018430271083255373,higher connectivity -> more ASD-like
+17,197,31,0.01828653599264817,higher connectivity -> more ASD-like
+18,194,136,0.018255873192741384,higher connectivity -> more ASD-like
+19,143,19,-0.018217920581739395,lower connectivity -> more ASD-like
+20,129,38,0.018140661043475424,higher connectivity -> more ASD-like
