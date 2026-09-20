@@ -1,4 +1,4 @@
-# Autism Risk Prediction from Resting-State fMRI (ABIDE)
+# Autism Classification from Resting-State fMRI (ABIDE)
 
 Can a machine-learning model trained on multi-site neuroimaging data generalize to an entirely unseen acquisition site?
 
