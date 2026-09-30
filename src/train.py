@@ -28,7 +28,7 @@ print(f"X: {X.shape}, y: {y.shape}, sites: {len(set(site_ids))} unique")
 models = {
     "logistic_regression": make_pipeline(StandardScaler(), LogisticRegression(max_iter=2000, C=1.0)),
     "svm_rbf": make_pipeline(StandardScaler(), SVC(kernel="rbf", C=1.0, probability=True)),
-    "gradient_boosting": GradientBoostingClassifier(n_estimators=200, max_depth=3),
+    "gradient_boosting": GradientBoostingClassifier(n_estimators=200, max_depth=3, random_state=42),
 }
 
 results = {}

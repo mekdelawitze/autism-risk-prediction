@@ -3,15 +3,15 @@
   "logistic_regression_kfold_auc_std": 0.03738679702854508,
   "svm_rbf_kfold_auc_mean": 0.7343253506936371,
   "svm_rbf_kfold_auc_std": 0.05533864501207508,
-  "gradient_boosting_kfold_auc_mean": 0.7425030354697874,
-  "gradient_boosting_kfold_auc_std": 0.046985174319010045,
+  "gradient_boosting_kfold_auc_mean": 0.7404957503422976,
+  "gradient_boosting_kfold_auc_std": 0.05723532903203088,
   "logistic_regression_logo_auc_mean": 0.6556022206453432,
   "logistic_regression_logo_auc_std": 0.05861678724323719,
   "svm_rbf_logo_auc_mean": 0.6054762660799813,
   "svm_rbf_logo_auc_std": 0.13771021703910752,
-  "gradient_boosting_logo_auc_mean": 0.6500785030611436,
-  "gradient_boosting_logo_auc_std": 0.10525147652855137,
+  "gradient_boosting_logo_auc_mean": 0.6344853393449147,
+  "gradient_boosting_logo_auc_std": 0.0807059685442441,
   "logistic_regression_generalization_gap": 0.09189319385774386,
   "svm_rbf_generalization_gap": 0.12884908461365585,
-  "gradient_boosting_generalization_gap": 0.09242453240864379
+  "gradient_boosting_generalization_gap": 0.10601041099738295
 }

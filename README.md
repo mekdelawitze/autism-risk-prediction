@@ -31,7 +31,7 @@ Most public analyses of the ABIDE dataset report accuracy or AUC under standard 
 |---|---|---|---|
 | Logistic Regression | 0.747 ± 0.037 | 0.656 ± 0.059 | 0.092 |
 | SVM (RBF) | 0.734 ± 0.055 | 0.605 ± 0.138 | 0.129 |
-| Gradient Boosting | 0.743 ± 0.047 | 0.650 ± 0.105 | 0.092 |
+| Gradient boosting | 0.740 ± 0.057 | 0.634 ± 0.081 | 0.106 |
 
 - Logistic regression and gradient boosting showed the smallest generalization gaps (~0.09 AUC); SVM showed both the largest gap (0.129) and the highest variance under LOSO (±0.138), indicating less stable generalization across sites.
 - Given its simplicity, consistency, and lower variance, logistic regression is the most robust model overall — not just the highest-scoring one.
