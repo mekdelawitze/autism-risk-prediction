@@ -1,114 +1,129 @@
-# Autism Classification from Resting-State fMRI (ABIDE)
+# Autism Classification from Resting-State fMRI
 
-Can a machine-learning model trained on multi-site neuroimaging data generalize to an entirely unseen acquisition site?
+Comparing logistic regression, SVM, and gradient boosting for ASD versus typically developing classification using functional connectivity from the ABIDE dataset.
 
-This project classifies ASD vs. typically developing (TD) participants using resting-state fMRI functional connectivity from the public ABIDE dataset. Rather than reporting standard cross-validation performance alone, models are evaluated with **leave-one-site-out (LOSO) cross-validation** to measure the site-generalization gap — a challenge central to real-world multi-site biomedical data, but one that's often glossed over in public ABIDE analyses.
+## Overview
 
-**Key result:** logistic regression achieved 0.747 AUC under standard cross-validation vs. 0.656 AUC under LOSO — a 0.092 AUC generalization gap.
+I built this project to examine how classification performance changes when a model is evaluated on an acquisition site that was not included in training. I compared stratified cross-validation with leave-one-site-out (LOSO) cross-validation using the same connectivity features and model configurations.
 
-## Motivation
+## Data and methods
 
-Most public analyses of the ABIDE dataset report accuracy or AUC under standard cross-validation, which can look impressive but masks a real problem: models trained on multi-site neuroimaging data often fail to generalize to unseen sites due to scanner and protocol differences (batch effects). This project measures that generalization gap directly and treats its size as a key result in its own right, not just a caveat.
+I used ABIDE data accessed through Nilearn and the Preprocessed Connectomes Project. The analysis includes the first 200 eligible participants returned after quality filtering: 111 ASD and 89 typically developing participants across six sites, with ages ranging from 8.0 to 35.2 years.
 
-## Dataset
+| Site | ASD | TD |
+|---|---:|---:|
+| OHSU | 12 | 13 |
+| OLIN | 14 | 14 |
+| PITT | 24 | 26 |
+| SDSU | 8 | 19 |
+| TRINITY | 19 | 14 |
+| UM_1 | 34 | 3 |
 
-- **Source:** [ABIDE](http://fcon_1000.projects.nitrc.org/indi/abide/) (Autism Brain Imaging Data Exchange), a public, multi-site resting-state fMRI dataset
-- **Sample:** 200 subjects (111 ASD / 89 typically developing), ages 8–35, pooled across 6 acquisition sites
-- **Features:** pairwise functional connectivity across 200 regions from the CC200 atlas (~19,900 features per subject)
+The downloaded data are C-PAC-preprocessed regional time series with band-pass filtering enabled and global signal regression disabled. Raw MRI preprocessing was not performed in this repository.
 
-## Methodology
+- **Features:** correlation connectivity calculated with Nilearn's `ConnectivityMeasure`, using its default shrinkage covariance estimator.
+- **Parcellation:** 200 CC200 regions, giving 19,900 unique region-pair features per participant.
+- **Models:** L2-regularized logistic regression, RBF-kernel SVM, and gradient boosting with 200 estimators and maximum tree depth 3.
+- **Scaling:** standardization within each training fold for logistic regression and SVM.
+- **Evaluation:** five-fold stratified cross-validation and LOSO cross-validation.
 
-1. **Data pipeline** — fetched and preprocessed ABIDE data using `nilearn`, extracted CC200-atlas-based pairwise correlation matrices as features
-2. **Modeling** — trained and compared three classical ML models: logistic regression, SVM (RBF kernel), and gradient boosting
-3. **Validation** — evaluated each model under two schemes:
-   - Standard stratified k-fold cross-validation
-   - Leave-one-site-out (LOSO) cross-validation, to simulate generalization to a completely unseen acquisition site
-4. **Interpretability** — mapped the most predictive connectivity features back to their underlying brain region pairs
+Model hyperparameters were fixed rather than selected through a tuning search. The stratified splits and gradient boosting model use `random_state=42`.
 
 ## Results
 
-| Model | Standard CV AUC | LOSO CV AUC | Generalization Gap |
-|---|---|---|---|
-| Logistic Regression | 0.747 ± 0.037 | 0.656 ± 0.059 | 0.092 |
-| SVM (RBF) | 0.734 ± 0.055 | 0.605 ± 0.138 | 0.129 |
+| Model | Stratified CV AUC | LOSO AUC | Difference |
+|---|---:|---:|---:|
+| Logistic regression | 0.747 ± 0.037 | 0.656 ± 0.059 | 0.092 |
+| SVM, RBF kernel | 0.734 ± 0.055 | 0.605 ± 0.138 | 0.129 |
 | Gradient boosting | 0.740 ± 0.057 | 0.634 ± 0.081 | 0.106 |
 
-- Logistic regression and gradient boosting showed the smallest generalization gaps (~0.09 AUC); SVM showed both the largest gap (0.129) and the highest variance under LOSO (±0.138), indicating less stable generalization across sites.
-- Given its simplicity, consistency, and lower variance, logistic regression is the most robust model overall — not just the highest-scoring one.
-- Every model showed a meaningful generalization gap, reinforcing that standard cross-validation alone overstates real-world performance on multi-site neuroimaging data.
-- A ROC curve, confusion matrix, and feature-importance plot for the logistic regression model (fit on a single held-out 75/25 train/test split, separate from the CV numbers above) are included in [`results/`](results/).
+Values are mean AUC ± standard deviation across folds, not confidence intervals. Differences were calculated before rounding.
 
-<p align="center">
-  <img src="results/roc_curve.png" alt="ROC curve for logistic regression" width="45%">
-  <img src="results/confusion_matrix.png" alt="Confusion matrix for logistic regression" width="45%">
-</p>
+All three models had lower average AUC under LOSO evaluation. Logistic regression had the highest observed mean AUC and lowest fold-to-fold standard deviation under both schemes. These results describe the tested configurations and do not establish that one model is generally superior.
 
-## Interpretability
+The difference between evaluation schemes suggests that performance depends on whether the acquisition site is represented during training. This experiment does not isolate the contributions of scanner differences, participant characteristics, or training-set size.
 
-The top 20 most predictive connectivity features (by logistic regression coefficient) were mapped back to their CC200 region pairs.
+### Single-split evaluation
 
-- **Region 191 recurred across multiple top-ranked pairs**, suggesting it acts as a hub with broadly ASD-relevant connectivity differences, rather than being involved in just one isolated connection.
-- **Of these top 20 features, 12 had negative coefficients** — meaning lower connectivity values contributed to the model's ASD classification for those pairs. This pattern is broadly consistent with prior reports of reduced functional connectivity in autism, though these model-derived associations should not be interpreted as evidence of causal or statistically significant region-pair differences.
+I also evaluated logistic regression on a stratified 75/25 split to generate a ROC curve and confusion matrix. This split produced an AUC of 0.646. It uses the same participant pool as the cross-validation analysis and is not an independent external test.
 
-*Note: CC200 is a data-driven parcellation (regions defined by clustering similar activity patterns), not a named anatomical atlas — regions are reported by index rather than anatomical label.*
+![Logistic regression ROC curve from a stratified 75/25 split](results/roc_curve.png)
 
-<p align="center">
-  <img src="results/top_features.png" alt="Top 20 most predictive connectivity edges" width="70%">
-</p>
+![Logistic regression confusion matrix from a stratified 75/25 split](results/confusion_matrix.png)
 
-Full rankings with region-pair indices and coefficients: [`results/top_edges_regions.csv`](results/top_edges_regions.csv)
+## Connectivity feature analysis
 
-## Why This Matters
+I ranked the 20 largest absolute logistic-regression coefficients from the model fitted on the 75% training split and mapped them to pairs of CC200 time-series columns.
 
-Biotech and computational biology teams working with real patient or multi-site data run into batch effects constantly — a model that looks great on a single-site benchmark can fail badly in deployment or on a new cohort. This project treats the standard-CV-to-LOSO performance gap as a result in itself, not just a caveat, rather than reporting top-line accuracy alone.
+Twelve coefficients were negative, and region index 191 appeared in three of the selected pairs. A negative coefficient means that lower standardized connectivity contributes toward the ASD prediction, conditional on the other features in the model.
 
-## Tech Stack
+These coefficients do not establish significant group differences or identify a biological hub. Their stability across training splits has not yet been evaluated.
 
-- **Language:** Python
-- **ML/Data:** scikit-learn, pandas, NumPy
-- **Neuroimaging:** nilearn (ABIDE data fetching and preprocessing)
-- **Environment:** Python virtual environment
-- **Version control:** Git/GitHub
+Region numbers are zero-based column indices. Their correspondence to atlas-image labels or anatomical regions has not been verified.
 
-## Repository Structure
+![Largest-magnitude logistic regression coefficients](results/top_features.png)
 
-```
-autism-risk-prediction/
-├── src/
-│   ├── fetch_data.py         # downloads ABIDE phenotypic + connectivity data
-│   ├── build_features.py     # builds connectivity feature matrix + labels
-│   ├── train.py               # trains + evaluates models (site-stratified CV)
-│   ├── evaluate.py            # generates ROC curves, confusion matrices
-│   └── edge_to_regions.py     # maps top predictive features to brain region pairs
-├── results/                   # saved metrics, plots, region tables
-├── requirements.txt
-└── README.md
-```
+The coefficient table is saved in [results/top_edges_regions.csv](results/top_edges_regions.csv).
 
-## Getting Started
+## Limitations
+
+The cohort is a convenience subset rather than a randomly selected or site-balanced sample. Class balance differs between sites, particularly at UM_1, which includes only three typically developing participants.
+
+The feature count is large relative to the sample size. Regularization and constrained tree depth limit model complexity, but do not remove the risk of unstable estimates.
+
+Age, sex, and head motion were not explicitly adjusted for in this analysis. Quality filtering does not establish that these potential confounds have been removed.
+
+The evaluation schemes differ in training-set size and aggregation: stratified CV averages five fold scores, while LOSO averages six site scores with equal weight per site. The reported difference is therefore not a direct estimate of scanner effects alone.
+
+This analysis concerns classification within an existing dataset, not prediction of future autism risk or clinical diagnosis.
+
+## Implementation notes
+
+I fixed the gradient boosting random seed and updated its saved metrics and result table. I also clarified the region-index descriptions in the mapping script and pinned package versions in `requirements.txt`.
+
+The evaluation currently saves aggregate metrics. Saving participant identifiers, fold assignments, per-site scores, and held-out predictions would make the results easier to inspect and reproduce.
+
+## Next steps
+
+I would first add explicit checks for label validity, feature quality, and alignment between participant records and time series.
+
+Further analysis would examine performance by site, demographic and motion-related confounding, and coefficient stability across folds. A larger, explicitly defined cohort would also help assess how well these results hold beyond the current subset.
+
+## Running the project
+
+From the repository root:
 
 ```bash
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
+```
 
+Download the regional time series and build connectivity features:
+
+```bash
 python src/fetch_data.py
 python src/build_features.py
+```
+
+Run the cross-validation comparisons:
+
+```bash
 python src/train.py
+```
+
+Generate the single-split figures and coefficient table:
+
+```bash
 python src/evaluate.py
 python src/edge_to_regions.py
 ```
 
-## Limitations & Future Work
+Outputs are saved in `results/`. Package versions are pinned, but identical results across environments have not been verified.
 
-- Sample size (200 subjects) is modest relative to the full ABIDE dataset (1000+); scaling up could improve robustness of the LOSO estimates.
-- The feature space (19,900 pairwise connectivity features for 200 subjects) is high-dimensional relative to sample size. No explicit feature-selection step is applied; instead, L2 regularization (logistic regression, SVM) and the gradient boosting model's built-in feature subsampling are relied on to manage this. Scaling is scoped within each cross-validation fold via a scikit-learn `Pipeline`, so the reported CV/LOSO scores are not inflated by preprocessing leakage.
-- Age range (8–35) was not controlled for, despite known age-related changes in functional connectivity.
-- CC200 regions are not anatomically labeled, limiting direct biological interpretation of individual features.
-- Interpretability analysis is based on model coefficients rather than a formal statistical test for region-pair significance.
-- Only classical ML models were tested; deep learning approaches (e.g., graph neural networks on connectivity matrices) could be a natural extension.
-- This is an exploratory/learning project, not a validated diagnostic tool.
+## References
 
-## Author
-
-**Mek** — Data Science M.S. student, building applied ML/bioinformatics portfolio projects for biotech internship applications.
+- [ABIDE](https://fcon_1000.projects.nitrc.org/indi/abide/)
+- [Preprocessed Connectomes Project: ABIDE](https://preprocessed-connectomes-project.org/abide/)
+- [Nilearn](https://nilearn.github.io/)
+- [scikit-learn](https://scikit-learn.org/)
